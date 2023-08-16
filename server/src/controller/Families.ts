@@ -38,6 +38,35 @@ export const deleteFamily=async(req:Request,res: Response)=>{
     }
 
 }
+export const updateFamily=async(req:Request,res: Response)=>{
+    try {
+        const { familyName, mother, father, children } = req.body;
+        const familyId = req.params.id; // Assuming you have an endpoint like '/updateFamily/:id'
+        
+        console.log(familyId)
+        const updatedFamily = await Family.findByIdAndUpdate(
+          familyId,
+          {
+            familyName,
+            mother,
+            father,
+            children,
+          },
+          { new: true } // This option returns the updated document
+        );
+    
+        if (!updatedFamily) {
+          return res.status(404).json({ message: 'Family not found' });
+        }
+    
+        return res.json({ updatedFamily });
+      } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+    
+}
+
 // const {_id} = req.body
 // try {
 //     const subj = await Subject.findByIdAndDelete({_id})    
@@ -50,4 +79,5 @@ export const deleteFamily=async(req:Request,res: Response)=>{
     createFamily,
     getFamily,
     deleteFamily,
+    updateFamily,
   }
