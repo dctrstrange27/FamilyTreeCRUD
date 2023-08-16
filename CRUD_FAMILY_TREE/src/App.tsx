@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useState } from "react";
 import { FiMail, FiPlus } from "react-icons/fi";
 import {MdDelete} from 'react-icons/md'
+import { toastSuccess } from "./utils";
 function App() {
   const uniqueId = () => {
     return "_" + Math.random().toString(36).substr(2, 9);
@@ -15,13 +16,6 @@ function App() {
     children: string[];
   }
 
-  const initialFamily: FamilyTypes = {
-    familyName: "",
-    mother: "",
-    father: "",
-    children: [],
-  };
-
   interface Children {
     value: string;
     key: string;
@@ -32,17 +26,16 @@ function App() {
     key: uniqueId(),
   };
 
-  const [family, setFamily] = useState<FamilyTypes>(initialFamily);
+  const [family, setFamily] = useState<FamilyTypes>({
+    familyName: "",
+    mother: "",
+    father: "",
+    children: [],
+  });
+
   const [children, setChildren] = useState<any>([{ value: "" }]);
   const [FamilyList, setFamilyList] = useState<any>([]);
-
-  const newFamily: FamilyTypes = {
-    familyName: family.familyName,
-    mother: family.mother,
-    father: family.father,
-    children: children,
-  };
-
+    
   const addFamily = async (fam: any, child: any) => {
     try {
       const family = await API.post("/createFamily", {
@@ -51,21 +44,25 @@ function App() {
         father: fam.father,
         children: child,
       });
-      console.log(family);
-      setFamily([]);
-      setFamily([]);
+      setFamilyList([...FamilyList, family.data.newFam])
+      setChildren([])
+      setFamily({
+        familyName: "",
+        mother: "",
+        father: "",
+        children: [],
+      });
+      toastSuccess("Success fully added Family!")
     } catch (error) {
       console.log(error);
     }
   };
-
   const handleInputChange = (field: keyof FamilyTypes, value: string) => {
     setFamily((prevFamily) => ({
       ...prevFamily,
       [field]: value,
     }));
   };
-
   const handleChildren = (key: string, value: "") => {
     const updatedOptions = children.map((opt: any) => {
       return opt.key === key ? { ...opt, value: value } : opt;
@@ -81,7 +78,6 @@ function App() {
     const fetchFamily = async () => {
       try {
         const families = await API.get("/getFamily");
-        console.log(families.data);
         setFamilyList(families.data);
       } catch (error) {
         console.log(error)
@@ -96,28 +92,41 @@ function App() {
         await API.delete('/deleteFamily',{
           data: { _id: id },
         })
+        toastSuccess("Success fully deleted Family!")
       } catch (error) {
         console.log(error)
       }
   }
+  const handleUpdate=(id:any)=>{
+    const family = FamilyList.find((fam:any)=> fam._id === id )
+    setFamily({
+      familyName: family.familyName,
+      mother: family.mother,
+      father: family.father,
+      children: [...family.children], 
+    });
+    console.log(family.children)
+  }
 
   return (
     <div className="w-full h-screen flex">
-      <div className="m-auto w-[80%] h-[80%] border-[10px] ">
-        <h1 className="text-center font-bold text-2xl">List of Familes</h1>
+      <div className="m-auto w-[80%] h-fit border-[10px ">
+        <h1 className="text-center font-bold text-2xl">List of Families</h1>
         <div className="flex flex-col gap-2 my-2">
-        {FamilyList.map((family:any) => (
-          <div key={family._id} className=" bg-slate-200 p-2 mx-2 rounded-xl relative">
+        {FamilyList?.map((family:any) => (
+          <div key={family._id} className="bg-slate-200 p-2 mx-2 rounded-xl relative hover:scale-[1.01] duration-300 ease-in-out">
            <div className="" onClick={()=> deleteFam(family._id)}>
-           <MdDelete  className="text-red-500 w-7 h-7 absolute right-5 top-5 hover:scale-125"></MdDelete>
+           <MdDelete className="text-red-500 w-7 h-7 absolute right-5 top-5 hover:scale-125"></MdDelete>
            </div>
-            <h1>Family Name: {family.familyName}</h1>
+           <button  onClick={()=> handleUpdate(family._id)} className="bg-blue-500 w-fit p-2 rounded-lg absolute right-5 bottom-5 hover:scale-125">update</button>
+            <h1>Family Name: <span className="font-bold">{family.familyName}</span> </h1>
             <h2>Mother: {family.mother}</h2>
             <h2>Father: {family.father}</h2>
+            <h3>Children:</h3>
             {family.children.map((childArray:any, index:any) => (
             <ul key={index}>
               {childArray.map((child:any, childIndex:any) => (
-                <li key={child.key || childIndex}>chil: {child.value}</li>
+                <li key={child.key || childIndex}>{child.value}</li>
               ))}
             </ul>
           ))}
@@ -126,7 +135,7 @@ function App() {
         </div>
         <div className="border-[1px] bg-slate-300 p-10 space-y-3">
           <h1 className="text-center text-2xl font-sans font-bold py-2">
-            Family Tree!
+            Add a Family
           </h1>
           <div className=" space-x-2">
             <label className="font-bold">Family Name</label>
@@ -186,7 +195,7 @@ function App() {
             onClick={() => {
               addFamily(family, children);
             }}
-            className="w-fit hover:scale-105 duration-300 ease-in-out p-2 rounded-md px-5 bg-blue-700">
+            className="w-fit hover:scale-105 duration-300 ease-in-out p-2 rounded-md px-5 bg-green-400">
             Add family
           </button>
         </div>

@@ -3,14 +3,18 @@ import Family from '../models/Family'
 
 export const createFamily =async (req: Request, res: Response) => {
         const {familyName,mother,father,children} = req.body
+        if(!req.body){
+            return res.status(404).json({message:"Plead add a Field"})
+        }
         try {
-            await Family.create({
+          const newFam =  await Family.create({
                 familyName:familyName,
                 mother:mother,
                 father:father,
                 children:children
             })
-            res.status(200).json({message:"successfully create!"})
+
+          return res.status(200).json({newFam})
         } catch (error) {
             console.log(error)
         }
@@ -23,6 +27,7 @@ export const getFamily =async (req: Request, res: Response) => {
         console.log(error)
     }
 };
+
 export const deleteFamily=async(req:Request,res: Response)=>{
     const {_id} = req.body
     try {
